@@ -11,6 +11,8 @@ node_modules
 dist
 dist-ssr
 *.local
+server/.env
+server/transactions.json
 
 # Editor directories and files
 .vscode/*

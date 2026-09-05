@@ -4,22 +4,38 @@ import Dashboard from './components/Dashboard';
 import Header from './components/Header';
 import TransactionList from './components/TransactionList';
 function App() {
-  const [transaction, setTransaction] = useState(() => {
-    const savedTransactions = localStorage.getItem('transactions');
-    return savedTransactions ? JSON.parse(savedTransactions) : [];
-  });
-  function addTransaction(newTransaction)
-  {
-      console.log(newTransaction);
-      setTransaction([...transaction, newTransaction]);
-  }
-  useEffect(() => { 
-    localStorage.setItem('transactions', JSON.stringify(transaction));
-  }, [transaction]);
+  const [transaction, setTransaction] = useState([]);
 
-  function deleteTransaction(id) {
-    const updatedTransaction = transaction.filter((t) => t.id !== id);
-    setTransaction(updatedTransaction);
+  useEffect(() => {
+    fetch('/api/transactions')
+      .then((response) => {
+        if (!response.ok) throw new Error('Failed to load transactions');
+        return response.json();
+      })
+      .then(setTransaction)
+      .catch((error) => console.error(error));
+  }, []);
+
+  async function addTransaction(newTransaction) {
+    const response = await fetch('/api/transactions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newTransaction),
+    });
+    if (!response.ok) throw new Error('Failed to add transaction');
+    const result = await response.json();
+    setTransaction((currentTransactions) => [
+      ...currentTransactions,
+      result.data,
+    ]);
+  }
+
+  async function deleteTransaction(id) {
+    const response = await fetch(`/api/transactions/${id}`, { method: 'DELETE' });
+    if (!response.ok) throw new Error('Failed to delete transaction');
+    setTransaction((currentTransactions) =>
+      currentTransactions.filter((currentTransaction) => currentTransaction.id !== id),
+    );
   }
   return (
     <main className="min-h-screen bg-slate-100 py-8">
